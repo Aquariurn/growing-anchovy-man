@@ -8,6 +8,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.prolificinteractive.materialcalendarview.CalendarDay
 import com.prolificinteractive.materialcalendarview.DayViewDecorator
 import com.prolificinteractive.materialcalendarview.DayViewFacade
@@ -23,11 +25,13 @@ import java.util.Locale
 class HomeFragment : Fragment() {
 
     private lateinit var calendarView: MaterialCalendarView
-    private lateinit var eventTextView: TextView
+    private lateinit var eventRecyclerView: RecyclerView
+    private lateinit var eventAdapter: EventAdapter
+    private lateinit var selectedDateText: TextView
     private var currentMonth: Int = CalendarDay.today().month - 1
 
     // 샘플 일정 데이터 (날짜별로 일정 저장)
-    private val eventMap: MutableMap<CalendarDay, String> = HashMap()
+    private val eventMap: MutableMap<CalendarDay, List<String>> = HashMap()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,17 +45,22 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         calendarView = view.findViewById(R.id.calendar)
-        eventTextView = view.findViewById(R.id.event_text)
+        eventRecyclerView = view.findViewById(R.id.event_recycler_view)
+        selectedDateText = view.findViewById(R.id.selected_date_text)
 
+        eventRecyclerView.layoutManager = LinearLayoutManager(requireContext())
+        eventAdapter = EventAdapter(emptyList())
+        eventRecyclerView.adapter = eventAdapter
         // 오늘 날짜 선택
-        val today = CalendarDay.today()
-        calendarView.selectedDate = today
-        updateEventText(today)
 
         // 샘플 일정 데이터 추가
-        eventMap[CalendarDay.from(2024, 3, 24)] = "월정이와 봄소풍 나가기"
-        eventMap[CalendarDay.from(2024, 10, 11)] = "회의 일정: 프로젝트 발표"
-        eventMap[CalendarDay.from(2024, 10, 12)] = "친구 생일 파티"
+        eventMap[CalendarDay.from(2024, 3, 24)] = listOf("프로젝트 회의")
+        eventMap[CalendarDay.from(2024, 10, 11)] = listOf("프로젝트 발표", "피드백")
+        eventMap[CalendarDay.from(2024, 10, 12)] = listOf("친구 생일","자유랭")
+
+        val today = CalendarDay.today()
+        calendarView.selectedDate = today
+        updateEventList(CalendarDay.today())
 
         calendarView.setShowOtherDates(MaterialCalendarView.SHOW_ALL)
 
@@ -74,20 +83,35 @@ class HomeFragment : Fragment() {
 
         // 날짜 선택 리스너 설정
         calendarView.setOnDateChangedListener(OnDateSelectedListener { _, date, _ ->
-            updateEventText(date)
+            updateEventList(date)
         })
 
-        calendarView.setOnMonthChangedListener{widget, date  ->
+        calendarView.setOnMonthChangedListener{ widget, date  ->
+            currentMonth = date.month - 1
             widget.clearSelection()
-
+            calendarView.removeDecorators()
+            calendarView.addDecorators(
+                SundayDecorator(),
+                SaturdayDecorator(),
+                TodayDecorator(),
+                OtherMonthDecorator(currentMonth),
+                EventDecorator(eventMap.keys)
+            )
         }
 
     }
 
     // 선택한 날짜에 해당하는 일정을 표시하는 메서드
-    private fun updateEventText(date: CalendarDay) {
-        val event = eventMap[date]
-        eventTextView.text = event ?: "일정이 없습니다."
+    private fun updateEventList(date: CalendarDay) {
+        val calendar = Calendar.getInstance()
+        calendar.set(date.year, date.month - 1, date.day)
+        val dateFormat = SimpleDateFormat("MM.dd. E", Locale.getDefault())
+        selectedDateText.text = dateFormat.format(calendar.time)
+
+        // 선택한 날짜에 해당하는 이벤트 목록을 가져오기
+        val events: List<String> = eventMap[date] ?: listOf("일정이 없습니다.")
+        eventAdapter = EventAdapter(events)
+        eventRecyclerView.adapter = eventAdapter
     }
 
 

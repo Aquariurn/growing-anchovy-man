@@ -42,13 +42,22 @@
     </androidx.cardview.widget.CardView>
 
     <TextView
-        android:id="@+id/event_text"
-        android:layout_width="wrap_content"
+        android:id="@+id/selected_date_text"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="일정이 없습니다."
-        android:textSize="18sp"
-        android:layout_gravity="center"
-        android:paddingTop="16dp"/>
+        android:text="날짜"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:paddingStart="16dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/event_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:scrollbars="vertical"/>
+
+
 
 
 </LinearLayout>
