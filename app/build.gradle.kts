@@ -42,7 +42,15 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
+    implementation("com.kakao.sdk:v2-user:2.20.1")
+    implementation ("com.kakao.maps.open:android:2.12.7")
+    implementation("com.github.bumptech.glide:glide:4.12.0")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.github.prolificinteractive:material-calendarview:2.0.1")
+    implementation(libs.androidx.ui.graphics.android)
+    annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
 }
