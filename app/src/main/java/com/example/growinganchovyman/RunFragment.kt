@@ -18,6 +18,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
 import android.graphics.Color
+import android.location.Location
 import android.os.CountDownTimer
 import android.widget.Button
 import android.widget.ImageButton
@@ -68,6 +69,11 @@ class RunFragment : Fragment() {
     private var locationRequest: LocationRequest? = null
     private var locationCallback: LocationCallback? = null
 
+    // 경로 추적을 위한 코드
+    private var lastLocation: Location? = null
+    private var totalDistance = 0f
+    private var checkDistance = 0f // 계산 최적화를 위한 변수
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -87,11 +93,16 @@ class RunFragment : Fragment() {
         stopButton = view.findViewById(R.id.stop_button)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireContext())
-        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 2000L).build()
+        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000L).build()
 
+        // 여기서 버튼 누르는거 인식함
         startButton.setOnClickListener{
             if(!isRunning && !isPaused){
                 startTimer()
+                val currentLocation = Location("dummyprovider")
+                currentLocation.latitude = 37.5665
+                currentLocation.longitude = 126.9780
+                getDistance(currentLocation)
             } else if(isRunning){
                 pauseTimer()
             }else if(isPaused){
@@ -122,7 +133,6 @@ class RunFragment : Fragment() {
 
         // Kakao API를 이용해 사용자 정보 가져오기
     }
-
     override fun onResume() {
         super.onResume()
         if (requestingLocationUpdates) {
@@ -180,6 +190,7 @@ class RunFragment : Fragment() {
         isPaused = false
         timer?.cancel()
         time = 0
+        totalDistance = 0f
         updateTimerText()
         startButton.setImageResource(R.drawable.start_button)
         timerText.visibility = View.GONE
@@ -197,6 +208,22 @@ class RunFragment : Fragment() {
 
     }
 
+    // gps 위치 데이터를 이용한 거리 계산
+    private fun getDistance(newLocation: Location): Float {
+        if (lastLocation != null){
+            val distance = lastLocation!!. distanceTo(newLocation)
+            checkDistance += distance // 누적거리 업데이트
+            Log.d("distanceFun", "이동거리 체크: ${checkDistance}m")  // 누적거리 찍히는지 테스트 로그
+
+            if (checkDistance >= 10f) {
+                totalDistance += checkDistance
+                checkDistance = 0f // 누적거리 초기화
+                Log.d("distanceFun", "이동거리: ${totalDistance}m")
+            }
+        }
+        lastLocation = newLocation
+        return totalDistance
+    }
 
 
     @SuppressLint("MissingPermission")
@@ -259,8 +286,6 @@ class RunFragment : Fragment() {
                                                 val newLatLng = LatLng.from(location.latitude,location.longitude)
                                                 centerLabel?.moveTo(newLatLng)
 
-
-
                                                 if(routeLineManager != null && startPosition != null){
                                                     val points = mutableListOf(startPosition,newLatLng)
                                                     val segment = RouteLineSegment.from(points).setStyles(stylesSet.getStyles(0))
@@ -269,6 +294,7 @@ class RunFragment : Fragment() {
                                                 }
 
                                                 startPosition = newLatLng
+                                                getDistance(location)
                                             }
                                         }
                                     }
