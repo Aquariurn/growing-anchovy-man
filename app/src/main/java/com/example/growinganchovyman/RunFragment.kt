@@ -212,12 +212,11 @@ class RunFragment : Fragment() {
             checkDistance += distance // 누적거리 업데이트
             Log.d("gps test", "$lastLocation")
             Log.d("gps test", "$newLocation")
-            Log.d("distanceFun", "이동거리 체크: ${checkDistance}m")  // 누적거리 찍히는지 테스트 로그
-
+            Log.d("distanceFun", "순간 이동거리 체크: ${checkDistance}m")  // 누적거리 찍히는지 테스트 로그
             if (checkDistance >= 10f && checkDistance < 100f) {
                 totalDistance += checkDistance
                 checkDistance = 0f // 누적거리 초기화
-                Log.d("distanceFun", "이동거리: ${totalDistance}m")
+                Log.d("distanceFun", "총 이동거리: ${totalDistance}m")
             }
         }
         lastLocation = newLocation
@@ -293,7 +292,12 @@ class RunFragment : Fragment() {
                                                 }
 
                                                 startPosition = newLatLng
-                                                getDistance(location)
+                                                if(isRunning){
+                                                    getDistance(location)
+                                                } else{
+                                                    totalDistance = 0f
+                                                }
+
                                             }
                                         }
                                     }
